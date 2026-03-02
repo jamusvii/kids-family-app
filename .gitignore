@@ -33,3 +33,9 @@ npm-debug.log*
 
 # Extracted text files (regeneratable)
 docs/hiclass/*.txt
+
+# PDF files (stored locally, not in repo)
+*.pdf
+
+# Prototype files
+prototype_*.html
