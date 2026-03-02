@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우리 가족 알리미 - 랜딩 페이지 시안</title>
+
+  <!-- 웹 폰트 로드: Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* 로컬 폰트 적용: 이서윤체 */
+    @font-face {
+      font-family: 'LeeSeoyun';
+      src: url('file:///C:/claude_code/kids/docs/fonts/이서윤체.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    /* 기본 리셋 및 변수 설정 */
+    :root {
+      --cream: #FFF8F0;
+      --coral: #FF9B85;
+      --mint: #A8E6CF;
+      --pink: #DDA0DD;
+      --yellow: #FFE4A0;
+      --brown: #8B7355;
+      --font-title: 'LeeSeoyun', cursive;
+      --font-body: 'Noto Sans KR', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--cream);
+      font-family: var(--font-body);
+      color: var(--brown);
+      display: flex;
+      justify-content: center;
+      /* 은은한 종이 질감용 노이즈 필터 (선택적) */
+      background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.05"/%3E%3C/svg%3E');
+      min-height: 100vh;
+    }
+
+    /* 모바일 뷰포트 시뮬레이터 래퍼 */
+    .mobile-wrapper {
+      width: 100%;
+      max-width: 414px;
+      /* 모바일 폭 최대치 */
+      min-height: 100vh;
+      background: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 30px rgba(139, 115, 85, 0.1);
+      position: relative;
+      overflow: hidden;
+      padding: 0 20px 40px;
+      backdrop-filter: blur(5px);
+    }
+
+    /* 상단 네비게이션 바 */
+    .top-nav {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      padding: 15px 15px 0;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .nav-link {
+      color: var(--brown);
+      text-decoration: none;
+      opacity: 0.8;
+      transition: opacity 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+
+    .nav-link:hover {
+      opacity: 1;
+      color: var(--coral);
+    }
+
+    /* 헤더 */
+    header {
+      text-align: center;
+      padding: 20px 0 30px;
+      /* nav바 공간 때문에 상단 패딩 축소 */
+    }
+
+    header h1 {
+      font-family: var(--font-title);
+      font-size: 34px;
+      color: var(--coral);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      /* 텍스트 섀도우로 부드러운 느낌 부여 */
+      text-shadow: 1px 1px 0px rgba(139, 115, 85, 0.2);
+    }
+
+    /* 카드 컨테이너 */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* 개별 카드 공통 스타일 */
+    .child-card {
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(139, 115, 85, 0.08);
+      border: 1px dashed var(--brown);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .child-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(139, 115, 85, 0.15);
+    }
+
+    /* 테마별 카드 배경 */
+    .card-mint {
+      background-color: rgba(168, 230, 207, 0.3);
+    }
+
+    .card-pink {
+      background-color: rgba(221, 160, 221, 0.25);
+    }
+
+    /* 카드 상단: 프로필과 정보 */
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    /* 프로필 썸네일 */
+    .avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background-color: white;
+      border: 2px solid var(--cream);
+      box-shadow: 0 4px 10px rgba(139, 115, 85, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      object-fit: cover;
+    }
+
+    .info-group {
+      flex: 1;
+    }
+
+    .info-group h2 {
+      font-family: var(--font-title);
+      font-size: 28px;
+      margin-bottom: 2px;
+      color: var(--brown);
+    }
+
+    .info-group p {
+      font-size: 13px;
+      color: #665239;
+      opacity: 0.9;
+    }
+
+    /* To-Do 위젯 부분 */
+    .todo-widget {
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .todo-title {
+      font-family: var(--font-title);
+      font-size: 20px;
+      margin-bottom: 12px;
+      color: var(--brown);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .todo-more {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--coral);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .todo-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    /* 체크박스 스타일 (별모양) */
+    .check-icon {
+      color: #BDBDBD;
+      font-size: 16px;
+    }
+
+    .priority-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+      margin-left: auto;
+      /* 우측 정렬 */
+    }
+
+    .badge-d1 {
+      background-color: var(--coral);
+      color: white;
+    }
+
+    .badge-d3 {
+      background-color: var(--yellow);
+      color: var(--brown);
+    }
+
+    /* 장식용 별/구름 요소 */
+    .deco-star {
+      position: absolute;
+      color: white;
+      font-size: 24px;
+      opacity: 0.6;
+    }
+
+    .star-1 {
+      top: 10px;
+      right: 20px;
+    }
+
+    .star-2 {
+      bottom: -5px;
+      left: -5px;
+      transform: rotate(15deg);
+      font-size: 40px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mobile-wrapper">
+    <!-- 상단 네비게이션 바 -->
+    <nav class="top-nav">
+      <a class="nav-link">홈</a>
+      <a class="nav-link">로그인</a>
+      <a class="nav-link">로그아웃</a>
+    </nav>
+
+    <!-- 헤더 영역 -->
+    <header>
+      <h1>✨ 우리 가족 알리미</h1>
+    </header>
+
+    <!-- 자녀 카드 리스트 -->
+    <div class="card-list">
+
+      <!-- 이연준 테마 카드 (민트) -->
+      <div class="child-card card-mint" onclick="alert('이연준 대시보드로 이동합니다!')">
+        <div class="deco-star star-1">✧</div>
+
+        <div class="card-header">
+          <img
+            src="file:///C:/Users/이병화/.gemini/antigravity/brain/d28bddb5-5029-4a60-b052-cb320fc85974/profile_yeo_jun_1772272939774.png"
+            alt="이연준" class="avatar" onerror="this.outerHTML='<div class=\'avatar\'>🧒</div>'" />
+          <div class="info-group">
+            <h2>이연준</h2>
+            <p>정현초등학교 6학년 9반</p>
+          </div>
+        </div>
+
+        <div class="todo-widget">
+          <div class="todo-title">
+            <span>오늘 할 일 맛보기</span>
+            <span class="todo-more">+ 2건 더</span>
+          </div>
+          <ul class="todo-list">
+            <li class="todo-item">
+              <span class="check-icon">☆</span>
+              <span>수학 학원 숙제 풀기</span>
+              <span class="priority-badge badge-d1">D-1</span>
+            </li>
+            <li class="todo-item">
+              <span class="check-icon">☆</span>
+              <span>체육복 미리 가방에 챙기기</span>
+              <span class="priority-badge badge-d3">D-3</span>
+            </li>
+          </ul>
+        </div>
+        <div class="deco-star star-2">✧</div>
+      </div>
+
+      <!-- 이아연 테마 카드 (라벤더) -->
+      <div class="child-card card-pink" onclick="alert('이아연 대시보드로 이동합니다!')">
+        <div class="deco-star star-1">✧</div>
+
+        <div class="card-header">
+          <img
+            src="file:///C:/Users/이병화/.gemini/antigravity/brain/d28bddb5-5029-4a60-b052-cb320fc85974/profile_ah_yeon_1772272955597.png"
+            alt="이아연" class="avatar" onerror="this.outerHTML='<div class=\'avatar\'>👧</div>'" />
+          <div class="info-group">
+            <h2>이아연</h2>
+            <p>정현초등학교 3학년 4반</p>
+          </div>
+        </div>
+
+        <div class="todo-widget">
+          <div class="todo-title">
+            <span>오늘 할 일 맛보기</span>
+            <span class="todo-more">+ 1건 더</span>
+          </div>
+          <ul class="todo-list">
+            <li class="todo-item">
+              <span class="check-icon">☆</span>
+              <span>그림 일기 쓰기</span>
+              <span class="priority-badge badge-d1">D-1</span>
+            </li>
+            <li class="todo-item">
+              <span class="check-icon">☆</span>
+              <span>내일 준비물 컬러찰흙 챙기기</span>
+              <span class="priority-badge badge-d1">D-1</span>
+            </li>
+          </ul>
+        </div>
+        <div class="deco-star star-2">✧</div>
+      </div>
+
+    </div> <!-- // card-list -->
+  </div> <!-- // mobile-wrapper -->
+
+</body>
+
+</html>

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학교 정보 - 우리 가족 이야기</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        @font-face {
+            font-family: 'LeeSeoyun';
+            src: url('file:///C:/claude_code/kids/docs/fonts/이서윤체.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --cream: #FFF8F0;
+            --coral: #FF9B85;
+            --mint: #A8E6CF;
+            --pink: #DDA0DD;
+            --yellow: #FFE4A0;
+            --brown: #8B7355;
+            --font-title: 'LeeSeoyun', cursive;
+            --font-body: 'Noto Sans KR', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--cream);
+            font-family: var(--font-body);
+            color: var(--brown);
+            display: flex;
+            justify-content: center;
+            background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.05"/%3E%3C/svg%3E');
+            min-height: 100vh;
+        }
+
+        .mobile-wrapper {
+            width: 100%;
+            max-width: 414px;
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 30px rgba(139, 115, 85, 0.1);
+            position: relative;
+            overflow-y: auto;
+            padding-bottom: 90px;
+        }
+
+        /* 상단 헤더 */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 20px 10px;
+        }
+
+        .back-btn {
+            color: var(--brown);
+            font-size: 24px;
+            text-decoration: none;
+            cursor: pointer;
+            width: 30px;
+        }
+
+        .header-title {
+            font-family: var(--font-title);
+            font-size: 24px;
+            color: var(--brown);
+            flex: 1;
+            text-align: center;
+        }
+
+        .settings-btn {
+            color: var(--brown);
+            font-size: 20px;
+            cursor: pointer;
+            width: 30px;
+            text-align: right;
+            opacity: 0.8;
+        }
+
+        /* 메인 콘텐츠 */
+        .content {
+            padding: 10px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .section-title {
+            font-family: var(--font-title);
+            font-size: 22px;
+            color: var(--brown);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 카드 공통 */
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(139, 115, 85, 0.05);
+            border: 1px dashed rgba(139, 115, 85, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 1. 시간표 테이블 */
+        .timetable-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .timetable-table th {
+            padding: 8px 0;
+            color: var(--coral);
+            font-weight: 700;
+            border-bottom: 2px solid rgba(139, 115, 85, 0.1);
+        }
+
+        .timetable-table td {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(139, 115, 85, 0.05);
+            color: var(--brown);
+            font-weight: 500;
+        }
+
+        .timetable-table td.period {
+            color: #999;
+            font-size: 11px;
+            width: 30px;
+        }
+
+        /* 오늘 요일 컬럼 강조 (예: 화요일) */
+        .timetable-table th:nth-child(3),
+        .timetable-table td:nth-child(3) {
+            background-color: rgba(168, 230, 207, 0.15);
+            /* 민트 하이라이트 */
+            border-radius: 4px;
+        }
+
+        /* 2. 통학버스 정보 탭 */
+        .bus-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 15px;
+        }
+
+        .bus-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: #999;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .bus-tab.active {
+            background: var(--yellow);
+            color: var(--brown);
+            box-shadow: 0 2px 5px rgba(139, 115, 85, 0.1);
+        }
+
+        .bus-route {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed rgba(139, 115, 85, 0.1);
+        }
+
+        .bus-route:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .route-loc {
+            font-weight: 700;
+            color: var(--brown);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .route-icon {
+            color: var(--mint);
+        }
+
+        .route-time {
+            font-family: var(--font-title);
+            font-size: 18px;
+            color: var(--coral);
+        }
+
+        /* 3. 학교 공지사항 (가정통신문) 리스트 */
+        .notice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notice-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            align-items: flex-start;
+        }
+
+        .notice-icon {
+            font-size: 20px;
+            background: var(--cream);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notice-content {
+            flex: 1;
+        }
+
+        .notice-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--brown);
+            margin-bottom: 2px;
+        }
+
+        .notice-date {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .notice-new {
+            font-size: 9px;
+            background: var(--coral);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 8px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        /* 하단 네비게이션 (학교 정보 액티브) */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            border-top: 1px solid rgba(139, 115, 85, 0.1);
+            padding: 15px 10px;
+            justify-content: space-around;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -4px 20px rgba(139, 115, 85, 0.05);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: #A0A0A0;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .nav-item.active {
+            color: var(--coral);
+        }
+
+        .nav-icon {
+            font-size: 22px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="mobile-wrapper">
+
+        <!-- 헤더 -->
+        <nav class="top-nav">
+            <a href="C:\claude_code\kids\prototype_dashboard.html" class="back-btn">←</a>
+            <span class="header-title">학교 정보</span>
+            <div class="settings-btn">⚙️</div>
+        </nav>
+
+        <div class="content">
+
+            <!-- 1. 주간 시간표 -->
+            <section>
+                <h2 class="section-title">🏫 이번 주 시간표</h2>
+                <div class="card">
+                    <table class="timetable-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>월</th>
+                                <th>화</th>
+                                <th>수</th>
+                                <th>목</th>
+                                <th>금</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="period">1교시</td>
+                                <td>국어</td>
+                                <td>수학</td>
+                                <td>체육</td>
+                                <td>과학</td>
+                                <td>국어</td>
+                            </tr>
+                            <tr>
+                                <td class="period">2교시</td>
+                                <td>국어</td>
+                                <td>수학</td>
+                                <td>체육</td>
+                                <td>과학</td>
+                                <td>음악</td>
+                            </tr>
+                            <tr>
+                                <td class="period">3교시</td>
+                                <td>도덕</td>
+                                <td>영어</td>
+                                <td>미술</td>
+                                <td>사회</td>
+                                <td>음악</td>
+                            </tr>
+                            <tr>
+                                <td class="period">4교시</td>
+                                <td>수학</td>
+                                <td>영어</td>
+                                <td>미술</td>
+                                <td>실과</td>
+                                <td>수학</td>
+                            </tr>
+                            <tr>
+                                <td class="period">점심</td>
+                                <td colspan="5" style="color:#A8E6CF; font-size:18px;">🍚</td>
+                            </tr>
+                            <tr>
+                                <td class="period">5교시</td>
+                                <td>사회</td>
+                                <td>과학</td>
+                                <td>국어</td>
+                                <td>영어</td>
+                                <td>창체</td>
+                            </tr>
+                            <tr>
+                                <td class="period">6교시</td>
+                                <td>-</td>
+                                <td>음악</td>
+                                <td>-</td>
+                                <td>영어</td>
+                                <td>창체</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 2. 통학 버스 시간표 -->
+            <section>
+                <h2 class="section-title">🚌 셔틀 버스 노선</h2>
+                <div class="card">
+                    <div class="bus-tabs">
+                        <div class="bus-tab">월/수/금</div>
+                        <div class="bus-tab active">화/목</div>
+                    </div>
+
+                    <div class="bus-route">
+                        <div class="route-loc"><span class="route-icon">📍</span> 푸르지오 남문 (등교)</div>
+                        <div class="route-time">08:15</div>
+                    </div>
+                    <div class="bus-route">
+                        <div class="route-loc"><span class="route-icon">📍</span> 정현초 후문 (하교)</div>
+                        <div class="route-time">14:30</div>
+                    </div>
+                    <div class="bus-route">
+                        <div class="route-loc"><span class="route-icon">📍</span> 푸르지오 남문 (도착)</div>
+                        <div class="route-time">14:45</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. 학교 공지 (Hiclass) -->
+            <section>
+                <h2 class="section-title">💌 알림장 / 가정통신문</h2>
+                <div class="notice-list">
+
+                    <div class="notice-item">
+                        <div class="notice-icon">📄</div>
+                        <div class="notice-content">
+                            <h4 class="notice-title">3월 급식 식단표 안내 <span class="notice-new">NEW</span></h4>
+                            <span class="notice-date">2026.03.09 • 정현초 영양실</span>
+                        </div>
+                    </div>
+
+                    <div class="notice-item">
+                        <div class="notice-icon">📢</div>
+                        <div class="notice-content">
+                            <h4 class="notice-title">2026학년도 학부모 총회 및 공개수업 안내</h4>
+                            <span class="notice-date">2026.03.05 • 정현초 교무실</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div> <!-- // content -->
+
+        <!-- 하단 네비게이션 -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>할 일 관리</span>
+            </a>
+            <a href="C:\claude_code\kids\prototype_calendar.html" class="nav-item">
+                <span class="nav-icon">📅</span>
+                <span>일정 관리</span>
+            </a>
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">🏫</span>
+                <span>학교 정보</span>
+            </a>
+        </nav>
+
+    </div>
+
+</body>
+
+</html>
