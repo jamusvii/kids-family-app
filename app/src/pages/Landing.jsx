@@ -12,7 +12,13 @@ export default function Landing() {
 
     const getUrgentTodos = (childId) => {
         const t = todos[childId] || [];
-        return t.filter(item => !item.isCompleted).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).slice(0, 3);
+        // 매일숙제(daily) 제외, 학교할일 우선 정렬
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        const catOrder = (t) => t.subCategory === 'school' ? 0 : 1;
+        return t
+            .filter(item => !item.isCompleted && item.recurrence !== 'daily')
+            .sort((a, b) => catOrder(a) - catOrder(b) || priorityOrder[a.priority] - priorityOrder[b.priority] || new Date(a.dueDate || '9999') - new Date(b.dueDate || '9999'))
+            .slice(0, 3);
     };
 
     const getRemainingCount = (childId) => {

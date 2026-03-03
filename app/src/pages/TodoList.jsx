@@ -117,7 +117,7 @@ export default function TodoList() {
                     <div className="form-row">
                         <select className="form-select" value={form.subCategory} onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))}>
                             <option value="school">🏫 학교</option>
-                            <option value="homework">📖 숙제</option>
+                            <option value="homework">📖 학교숙제</option>
                         </select>
                         <select className="form-select" value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}>
                             <option value="high">🔴 긴급</option>
@@ -143,7 +143,7 @@ export default function TodoList() {
                                 : todaySchool.map(renderTodoItem)}
                         </section>
                         <section className="todo-section">
-                            <h3 className="section-label">📖 숙제</h3>
+                            <h3 className="section-label">📖 학교숙제</h3>
                             {todayHomework.length === 0 ? <p className="empty-msg">항목이 없습니다</p>
                                 : todayHomework.map(renderTodoItem)}
                         </section>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import BottomNav from '../components/BottomNav';
@@ -12,7 +13,7 @@ export default function Dashboard() {
     if (!child) return <p>잘못된 접근입니다.</p>;
 
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0=일..6=토
+    const dayOfWeek = today.getDay();
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
     /* 이번 주 월~금 계산 */
@@ -23,13 +24,17 @@ export default function Dashboard() {
     friday.setDate(monday.getDate() + 4);
     const weekLabel = `${monday.getMonth() + 1}/${monday.getDate()}(월) ~ ${friday.getMonth() + 1}/${friday.getDate()}(금)`;
 
-    /* 이번 주 핵심 할 일 */
+    /* 이번 주 핵심 할 일 — 학교할일 우선, 매일숙제 제외 */
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    const catOrder = (t) => t.subCategory === 'school' ? 0 : 1;
     const weekTodos = (todos[childId] || [])
-        .filter(t => !t.isCompleted)
-        .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+        .filter(t => !t.isCompleted && t.recurrence !== 'daily')
+        .sort((a, b) => catOrder(a) - catOrder(b) || priorityOrder[a.priority] - priorityOrder[b.priority] || new Date(a.dueDate || '9999') - new Date(b.dueDate || '9999'))
         .slice(0, 5);
 
-    const completedTodos = (todos[childId] || []).filter(t => t.isCompleted).slice(0, 2);
+    const completedTodos = (todos[childId] || [])
+        .filter(t => t.isCompleted && t.recurrence !== 'daily')
+        .slice(0, 2);
 
     /* D-Day 이벤트 */
     const ddayEvents = (events[childId] || [])
@@ -49,23 +54,22 @@ export default function Dashboard() {
     const todayDayName = dayNames[dayOfWeek];
     let busInfo = null;
     if (busData) {
-        const dismissalToday = busData.dismissal?.[todayDayName];
         busInfo = {
             commute: busData.commute,
-            dismissal: dismissalToday,
+            dismissal: busData.dismissal?.[todayDayName],
         };
     }
 
     /* 최근 알림 */
-    const recentNotices = (schoolInfo[childId]?.notices || [])
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 3);
+    const recentNotices = (schoolInfo[childId]?.notices || []).slice(0, 3);
 
     const themeClass = child.theme === 'mint' ? 'theme-mint' : 'theme-pink';
 
+    /* 알림장 팝업 */
+    const [selectedNotice, setSelectedNotice] = useState(null);
+
     return (
         <div className={`dashboard-page ${themeClass}`}>
-            {/* 헤더 */}
             <nav className="top-nav">
                 <button className="back-btn" onClick={() => navigate('/')}>←</button>
                 <div className="header-profile">
@@ -75,14 +79,12 @@ export default function Dashboard() {
                 <div style={{ width: 30 }} />
             </nav>
 
-            {/* 주간 배너 */}
             <div className="week-banner">
                 <span className="week-banner-icon">📆</span>
                 <span className="week-banner-text">{weekLabel} 주간</span>
             </div>
 
             <div className="dash-content">
-                {/* 오늘 시간표 */}
                 {todaySubjects.length > 0 && (
                     <section>
                         <h2 className="section-title">📅 오늘 시간표 ({dayNames[dayOfWeek]}요일)</h2>
@@ -110,7 +112,7 @@ export default function Dashboard() {
                                     <div className="task-content">
                                         <span className="task-text">{todo.title}</span>
                                         <div className="task-meta">
-                                            <span className="badge badge-cat">{todo.category}</span>
+                                            <span className="badge badge-cat">{todo.subCategory === 'school' ? '학교' : '학교숙제'}</span>
                                             {todo.priority === 'high' && <span className="badge badge-urgent">긴급</span>}
                                             {todo.source === 'hiclass' && <span className="badge badge-hiclass">하이클래스</span>}
                                         </div>
@@ -132,7 +134,6 @@ export default function Dashboard() {
                     </div>
                 </section>
 
-                {/* D-Day */}
                 {ddayEvents.length > 0 && (
                     <section>
                         <h2 className="section-title">⏰ D-Day 메모</h2>
@@ -147,7 +148,6 @@ export default function Dashboard() {
                     </section>
                 )}
 
-                {/* 버스 / 하교 정보 */}
                 <section>
                     <h2 className="section-title">🚌 오늘 스케줄</h2>
                     <div className="card bus-card">
@@ -179,13 +179,13 @@ export default function Dashboard() {
                     </div>
                 </section>
 
-                {/* 최근 알림 */}
+                {/* 최근 알림 — 클릭 시 팝업 */}
                 {recentNotices.length > 0 && (
                     <section>
                         <h2 className="section-title">📢 최근 알림</h2>
                         <div className="notice-preview-list">
                             {recentNotices.map(notice => (
-                                <div key={notice.id} className="card notice-preview-card" onClick={() => navigate(`/dashboard/${childId}/school`)}>
+                                <div key={notice.id} className="card notice-preview-card" onClick={() => setSelectedNotice(notice)}>
                                     <div className="notice-preview-row">
                                         <div className="notice-preview-info">
                                             <span className="notice-preview-title">
@@ -204,6 +204,30 @@ export default function Dashboard() {
             </div>
 
             <BottomNav />
+
+            {/* 알림장 팝업 모달 */}
+            {selectedNotice && (
+                <div className="notice-modal-overlay" onClick={() => setSelectedNotice(null)}>
+                    <div className="notice-modal-center" onClick={e => e.stopPropagation()}>
+                        <div className="modal-top-bar">
+                            <div className="modal-header">
+                                <span className="modal-title">{selectedNotice.title}</span>
+                                {selectedNotice.isNew && <span className="badge badge-new">NEW</span>}
+                            </div>
+                            <button className="modal-close-btn" onClick={() => setSelectedNotice(null)}>✕</button>
+                        </div>
+                        <p className="modal-meta">{selectedNotice.date} · {selectedNotice.source}</p>
+                        <div className="modal-divider" />
+                        <div className="modal-body">
+                            {selectedNotice.content?.split('\n').filter(l => l.trim()).map((line, i) => (
+                                <div key={i} className="modal-item">
+                                    <span className="modal-line">{line}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
