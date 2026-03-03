@@ -77,7 +77,7 @@ export function DataProvider({ children: reactChildren }) {
     }, []);
 
     const loadSchoolInfo = useCallback(async () => {
-        const { data: notices } = await supabase.from('notices').select('*').order('date', { ascending: false });
+        const { data: notices } = await supabase.from('notices').select('*').order('id', { ascending: false });
         const { data: infoRows } = await supabase.from('school_info').select('*').order('sort_order', { ascending: true });
         const map = {};
         (notices || []).forEach(n => {

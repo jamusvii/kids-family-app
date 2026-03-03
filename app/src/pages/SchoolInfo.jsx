@@ -50,22 +50,6 @@ export default function SchoolInfo() {
                 {/* 시간표 탭 */}
                 {activeTab === 'timetable' && (
                     <>
-                        {/* 최신 알림장 카드 */}
-                        {latestNotice && (
-                            <section>
-                                <h2 className="section-title">📢 최신 알림장</h2>
-                                <div className="card notice-preview-card" onClick={() => setSelectedNotice(latestNotice)}>
-                                    <div className="notice-preview-header">
-                                        <span className="notice-preview-title">{latestNotice.title}</span>
-                                        {latestNotice.isNew && <span className="badge badge-new">NEW</span>}
-                                    </div>
-                                    <p className="notice-preview-date">{latestNotice.date} · {latestNotice.source}</p>
-                                    <p className="notice-preview-body">{latestNotice.content?.split('\n')[0]}</p>
-                                    <span className="notice-preview-more">자세히 보기 →</span>
-                                </div>
-                            </section>
-                        )}
-
                         <section>
                             <h2 className="section-title">🏫 이번 주 시간표</h2>
                             <div className="card">
@@ -93,6 +77,22 @@ export default function SchoolInfo() {
                                 </table>
                             </div>
                         </section>
+
+                        {/* 최신 알림장 카드 — 시간표 아래 */}
+                        {latestNotice && (
+                            <section>
+                                <h2 className="section-title">📢 최신 알림장</h2>
+                                <div className="card notice-preview-card" onClick={() => setSelectedNotice(latestNotice)}>
+                                    <div className="notice-preview-header">
+                                        <span className="notice-preview-title">{latestNotice.title}</span>
+                                        {latestNotice.isNew && <span className="badge badge-new">NEW</span>}
+                                    </div>
+                                    <p className="notice-preview-date">{latestNotice.date} · {latestNotice.source}</p>
+                                    <p className="notice-preview-body">{latestNotice.content?.split('\n')[0]}</p>
+                                    <span className="notice-preview-more">탭하여 전체 보기 →</span>
+                                </div>
+                            </section>
+                        )}
 
                         {/* 통학 버스 */}
                         <section>
@@ -220,20 +220,24 @@ export default function SchoolInfo() {
 
             <BottomNav />
 
-            {/* 알림장 팝업 모달 */}
+            {/* 알림장 팝업 모달 — 중앙 위치 */}
             {selectedNotice && (
                 <div className="notice-modal-overlay" onClick={() => setSelectedNotice(null)}>
-                    <div className="notice-modal" onClick={e => e.stopPropagation()}>
-                        <button className="modal-close-btn" onClick={() => setSelectedNotice(null)}>✕</button>
-                        <div className="modal-header">
-                            <span className="modal-title">📢 {selectedNotice.title}</span>
-                            {selectedNotice.isNew && <span className="badge badge-new">NEW</span>}
+                    <div className="notice-modal-center" onClick={e => e.stopPropagation()}>
+                        <div className="modal-top-bar">
+                            <div className="modal-header">
+                                <span className="modal-title">{selectedNotice.title}</span>
+                                {selectedNotice.isNew && <span className="badge badge-new">NEW</span>}
+                            </div>
+                            <button className="modal-close-btn" onClick={() => setSelectedNotice(null)}>✕</button>
                         </div>
                         <p className="modal-meta">{selectedNotice.date} · {selectedNotice.source}</p>
                         <div className="modal-divider" />
                         <div className="modal-body">
-                            {selectedNotice.content?.split('\n').map((line, i) => (
-                                line.trim() ? <p key={i} className="modal-line">{line}</p> : <br key={i} />
+                            {selectedNotice.content?.split('\n').filter(l => l.trim()).map((line, i) => (
+                                <div key={i} className="modal-item">
+                                    <span className="modal-line">{line}</span>
+                                </div>
                             ))}
                         </div>
                     </div>
