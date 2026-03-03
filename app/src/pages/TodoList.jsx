@@ -4,147 +4,186 @@ import { useData } from '../context/DataContext';
 import BottomNav from '../components/BottomNav';
 import './TodoList.css';
 
-const CATEGORIES = ['준비물', '과제', '학교', '학원', '생활'];
+const TABS = [
+    { key: 'today', label: '📌 오늘할일' },
+    { key: 'homework', label: '📝 매일숙제' },
+    { key: 'weekly', label: '📋 주간할일' },
+];
+
+const PRIORITY_LABELS = { high: { label: '🔴 긴급', cls: 'badge-urgent' }, medium: { label: '🟡 보통', cls: 'badge-medium' }, low: { label: '🟢 여유', cls: 'badge-low' } };
+
+const DAILY_HOMEWORK = ['한자', '연산수학', '기탄국어', '독서'];
 
 export default function TodoList() {
     const { childId } = useParams();
     const navigate = useNavigate();
-    const { childrenData, todos, toggleTodo, addTodo, deleteTodo } = useData();
+    const { childrenData, todos, homeworkLogs, addTodo, toggleTodo, deleteTodo, toggleHomework } = useData();
+
     const child = childrenData[childId];
+    const themeClass = child?.theme === 'mint' ? 'theme-mint' : 'theme-pink';
 
-    const [filter, setFilter] = useState('all');
+    const [activeTab, setActiveTab] = useState('today');
     const [showForm, setShowForm] = useState(false);
-    const [newTitle, setNewTitle] = useState('');
-    const [newCategory, setNewCategory] = useState('학교');
-    const [newDueDate, setNewDueDate] = useState('');
-    const [newPriority, setNewPriority] = useState('medium');
+    const [form, setForm] = useState({ title: '', subCategory: 'school', priority: 'medium', dueDate: '', category: '학교' });
+    const [subFilter, setSubFilter] = useState('all'); // all | school | homework
 
-    const allTodos = todos[childId] || [];
+    // 오늘할일: recurrence='once' 이면서 complete 안된 것 + 오늘/다음날 마감
+    const todayTodos = (todos[childId] || []).filter(t => t.recurrence === 'once');
+    const todaySchool = todayTodos.filter(t => t.subCategory === 'school' || t.subCategory == null);
+    const todayHomework = todayTodos.filter(t => t.subCategory === 'homework');
 
-    const filtered = filter === 'all'
-        ? allTodos.filter(t => !t.isCompleted)
-        : filter === 'done'
-            ? allTodos.filter(t => t.isCompleted)
-            : allTodos.filter(t => t.category === filter && !t.isCompleted);
-
-    // 정렬: 우선순위(high→medium→low) → 마감일 순
-    const priorityOrder = { high: 0, medium: 1, low: 2 };
-    const sorted = [...filtered].sort((a, b) => {
-        if (filter === 'done') return 0;
-        const pDiff = (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1);
-        if (pDiff !== 0) return pDiff;
-        return new Date(a.dueDate || '2099-12-31') - new Date(b.dueDate || '2099-12-31');
+    // 주간할일: 이번 주 내 마감 or 마감 없는 once 할일
+    const weeklyTodos = todayTodos.filter(t => {
+        if (t.isCompleted) return false;
+        if (!t.dueDate) return false;
+        const due = new Date(t.dueDate);
+        const today = new Date();
+        const diff = (due - today) / (1000 * 60 * 60 * 24);
+        return diff > 1; // 내일 이후
     });
 
-    const completedCount = allTodos.filter(t => t.isCompleted).length;
-    const totalCount = allTodos.length;
+    // 매일숙제 완료 여부
+    const todayLogs = homeworkLogs[childId] || [];
 
-    const handleAdd = (e) => {
+    if (!child) return <p>잘못된 접근입니다.</p>;
+
+    const handleAddTodo = async (e) => {
         e.preventDefault();
-        if (!newTitle.trim()) return;
-        addTodo(childId, {
-            title: newTitle,
-            category: newCategory,
-            dueDate: newDueDate || null,
-            isCompleted: false,
-            priority: newPriority,
-            source: 'user',
+        if (!form.title.trim()) return;
+        await addTodo(childId, {
+            title: form.title.trim(),
+            category: form.subCategory === 'school' ? '학교' : '숙제',
+            subCategory: form.subCategory,
+            priority: form.priority,
+            dueDate: form.dueDate || null,
+            recurrence: 'once',
         });
-        setNewTitle('');
-        setNewDueDate('');
-        setNewPriority('medium');
+        setForm({ title: '', subCategory: 'school', priority: 'medium', dueDate: '', category: '학교' });
         setShowForm(false);
     };
 
-    const getDueDateLabel = (dateStr) => {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
-        const today = new Date();
-        const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
-        if (diff < 0) return '지남';
-        if (diff === 0) return '오늘';
-        if (diff === 1) return '내일';
-        return dateStr.slice(5);
+    const getDueDateLabel = (dueDate) => {
+        if (!dueDate) return null;
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const due = new Date(dueDate); due.setHours(0, 0, 0, 0);
+        const diff = Math.floor((due - today) / (1000 * 60 * 60 * 24));
+        if (diff < 0) return { label: '⚠️ 지남', cls: 'badge-overdue' };
+        if (diff === 0) return { label: '오늘', cls: 'badge-today' };
+        if (diff === 1) return { label: '내일', cls: 'badge-tomorrow' };
+        return { label: `D-${diff}`, cls: 'badge-dday' };
+    };
+
+    const renderTodoItem = (todo) => {
+        const dl = getDueDateLabel(todo.dueDate);
+        return (
+            <div key={todo.id} className={`todo-item ${todo.isCompleted ? 'done' : ''}`}>
+                <button className={`check-btn ${todo.isCompleted ? 'done-btn' : ''}`} onClick={() => toggleTodo(childId, todo.id)}>
+                    {todo.isCompleted ? '✓' : ''}
+                </button>
+                <div className="todo-content">
+                    <span className="todo-text">{todo.title}</span>
+                    <div className="todo-meta">
+                        {todo.source === 'hiclass' && <span className="badge badge-hiclass">하이클래스</span>}
+                        <span className={`badge ${PRIORITY_LABELS[todo.priority]?.cls || 'badge-medium'}`}>{PRIORITY_LABELS[todo.priority]?.label || '🟡 보통'}</span>
+                        {dl && <span className={`badge ${dl.cls}`}>{dl.label}</span>}
+                    </div>
+                </div>
+                <button className="delete-btn" onClick={() => deleteTodo(childId, todo.id)}>🗑</button>
+            </div>
+        );
     };
 
     return (
-        <div className="page todolist-page">
+        <div className={`todolist-page ${themeClass}`}>
             <nav className="top-nav">
-                <button className="back-btn" onClick={() => navigate(`/dashboard/${childId}`)}>←</button>
-                <span className="header-title">할일 관리</span>
-                <button className="add-btn" onClick={() => setShowForm(!showForm)}>+</button>
+                <button className="back-btn" onClick={() => navigate('/')}>←</button>
+                <span className="header-title">할일관리</span>
+                <button className="add-btn" onClick={() => setShowForm(f => !f)}>+</button>
             </nav>
 
-            {/* 진행률 */}
-            <div className="progress-bar-container">
-                <div className="progress-info">
-                    <span>{completedCount}/{totalCount} 완료</span>
-                    <span>{totalCount > 0 ? Math.round(completedCount / totalCount * 100) : 0}%</span>
-                </div>
-                <div className="progress-track">
-                    <div className="progress-fill" style={{ width: `${totalCount > 0 ? completedCount / totalCount * 100 : 0}%` }} />
-                </div>
-            </div>
-
-            {/* 필터 탭 */}
-            <div className="filter-tabs">
-                {['all', ...CATEGORIES, 'done'].map(f => (
-                    <button key={f} className={`filter-tab ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-                        {f === 'all' ? '전체' : f === 'done' ? `완료(${completedCount})` : f}
+            {/* 탭 */}
+            <div className="tab-bar">
+                {TABS.map(tab => (
+                    <button key={tab.key} className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`} onClick={() => setActiveTab(tab.key)}>
+                        {tab.label}
                     </button>
                 ))}
             </div>
 
-            {/* 추가 폼 */}
-            {showForm && (
-                <form className="card add-form animate-in" onSubmit={handleAdd}>
-                    <input
-                        className="input-field"
-                        placeholder="할 일을 입력하세요"
-                        value={newTitle}
-                        onChange={e => setNewTitle(e.target.value)}
-                        autoFocus
-                    />
+            {/* 할일 추가 폼 */}
+            {showForm && activeTab !== 'homework' && (
+                <form className="todo-form card" onSubmit={handleAddTodo}>
+                    <input className="form-input" placeholder="할일 내용을 입력하세요" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} autoFocus />
                     <div className="form-row">
-                        <select className="input-field" value={newCategory} onChange={e => setNewCategory(e.target.value)}>
-                            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                        <select className="form-select" value={form.subCategory} onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))}>
+                            <option value="school">🏫 학교</option>
+                            <option value="homework">📖 숙제</option>
                         </select>
-                        <select className="input-field" value={newPriority} onChange={e => setNewPriority(e.target.value)}>
+                        <select className="form-select" value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}>
                             <option value="high">🔴 긴급</option>
                             <option value="medium">🟡 보통</option>
                             <option value="low">🟢 여유</option>
                         </select>
+                        <input type="date" className="form-input" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
                     </div>
-                    <div className="form-row">
-                        <input className="input-field" type="date" value={newDueDate} onChange={e => setNewDueDate(e.target.value)} />
+                    <div className="form-actions">
+                        <button type="submit" className="btn-primary">추가</button>
+                        <button type="button" className="btn-cancel" onClick={() => setShowForm(false)}>취소</button>
                     </div>
-                    <button type="submit" className="btn-primary">추가하기</button>
                 </form>
             )}
 
-            {/* 할 일 리스트 */}
-            <div className="todo-full-list">
-                {sorted.length === 0 && <p className="task-empty">
-                    {filter === 'done' ? '완료된 항목이 없습니다.' : '해당 항목이 없습니다. ✨'}
-                </p>}
-                {sorted.map(todo => (
-                    <div key={todo.id} className={`card todo-card ${todo.isCompleted ? 'done' : ''}`}>
-                        <div className="todo-card-row">
-                            <button className={`check-btn ${todo.isCompleted ? 'done-btn' : ''}`} onClick={() => toggleTodo(childId, todo.id)}>✔</button>
-                            <div className="todo-card-content">
-                                <span className={`todo-card-text ${todo.isCompleted ? 'line-through' : ''}`}>{todo.title}</span>
-                                <div className="task-meta">
-                                    <span className="badge badge-cat">{todo.category}</span>
-                                    {todo.priority === 'high' && <span className="badge badge-urgent">긴급</span>}
-                                    {todo.priority === 'low' && <span className="badge badge-low">여유</span>}
-                                    {todo.dueDate && <span className={`badge ${getDueDateLabel(todo.dueDate) === '지남' ? 'badge-urgent' : 'badge-warning'}`}>{getDueDateLabel(todo.dueDate)}</span>}
-                                    {todo.source === 'hiclass' && <span className="badge badge-hiclass">하이클래스</span>}
-                                </div>
+            <div className="todo-content-area">
+                {/* 오늘할일 탭 */}
+                {activeTab === 'today' && (
+                    <div>
+                        <section className="todo-section">
+                            <h3 className="section-label">🏫 학교</h3>
+                            {todaySchool.length === 0 ? <p className="empty-msg">항목이 없습니다</p>
+                                : todaySchool.map(renderTodoItem)}
+                        </section>
+                        <section className="todo-section">
+                            <h3 className="section-label">📖 숙제</h3>
+                            {todayHomework.length === 0 ? <p className="empty-msg">항목이 없습니다</p>
+                                : todayHomework.map(renderTodoItem)}
+                        </section>
+                    </div>
+                )}
+
+                {/* 매일숙제 탭 */}
+                {activeTab === 'homework' && (
+                    <div>
+                        <p className="homework-desc">주중 매일 체크하는 학습 루틴입니다. 매일 자동으로 초기화됩니다.</p>
+                        <div className="homework-list">
+                            {DAILY_HOMEWORK.map(item => {
+                                const done = todayLogs.includes(item);
+                                return (
+                                    <div key={item} className={`homework-item ${done ? 'done' : ''}`} onClick={() => toggleHomework(childId, item)}>
+                                        <span className={`hw-check ${done ? 'checked' : ''}`}>{done ? '✓' : ''}</span>
+                                        <span className="hw-title">{item}</span>
+                                        {done && <span className="hw-done-label">완료!</span>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="homework-progress">
+                            <span>{todayLogs.length} / {DAILY_HOMEWORK.length} 완료</span>
+                            <div className="hw-progress-bar">
+                                <div className="hw-progress-fill" style={{ width: `${(todayLogs.length / DAILY_HOMEWORK.length) * 100}%` }} />
                             </div>
-                            <button className="delete-btn" onClick={() => deleteTodo(childId, todo.id)}>✕</button>
                         </div>
                     </div>
-                ))}
+                )}
+
+                {/* 주간할일 탭 */}
+                {activeTab === 'weekly' && (
+                    <div>
+                        <section className="todo-section">
+                            {weeklyTodos.length === 0 ? <p className="empty-msg">이번 주 예정된 할일이 없습니다 🎉</p>
+                                : weeklyTodos.map(renderTodoItem)}
+                        </section>
+                    </div>
+                )}
             </div>
 
             <BottomNav />

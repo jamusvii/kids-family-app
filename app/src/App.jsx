@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import TodoList from './pages/TodoList';
 import Calendar from './pages/Calendar';
 import SchoolInfo from './pages/SchoolInfo';
+import AcademyInfo from './pages/AcademyInfo';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -32,6 +33,7 @@ function AppRoutes() {
       <Route path="/dashboard/:childId/todos" element={<ProtectedRoute><TodoList /></ProtectedRoute>} />
       <Route path="/dashboard/:childId/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
       <Route path="/dashboard/:childId/school" element={<ProtectedRoute><SchoolInfo /></ProtectedRoute>} />
+      <Route path="/dashboard/:childId/academy" element={<ProtectedRoute><AcademyInfo /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

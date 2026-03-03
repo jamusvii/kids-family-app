@@ -1,19 +1,29 @@
 import { NavLink, useParams } from 'react-router-dom';
 
+const NAV_ITEMS = [
+    { to: '', label: '대시보드', icon: '🏠' },
+    { to: '/todos', label: '할일관리', icon: '📋' },
+    { to: '/school', label: '학교정보', icon: '🏫' },
+    { to: '/academy', label: '학원정보', icon: '🎓' },
+];
+
 export default function BottomNav() {
     const { childId } = useParams();
+    const base = `/dashboard/${childId}`;
 
     return (
         <nav className="bottom-nav">
-            <NavLink to={`/dashboard/${childId}`} end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                <span className="nav-icon">🏠</span><span>대시보드</span>
-            </NavLink>
-            <NavLink to={`/dashboard/${childId}/todos`} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                <span className="nav-icon">📋</span><span>할일관리</span>
-            </NavLink>
-            <NavLink to={`/dashboard/${childId}/school`} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                <span className="nav-icon">🏫</span><span>학교정보</span>
-            </NavLink>
+            {NAV_ITEMS.map(item => (
+                <NavLink
+                    key={item.to}
+                    to={`${base}${item.to}`}
+                    end={item.to === ''}
+                    className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+                >
+                    <span className="nav-icon">{item.icon}</span>
+                    <span>{item.label}</span>
+                </NavLink>
+            ))}
         </nav>
     );
 }
