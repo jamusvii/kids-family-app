@@ -2,10 +2,10 @@
 
 > 하이클래스 알림장 기반 자녀 학교생활 관리 PWA
 
-[![Vercel](https://img.shields.io/badge/Deployed-Vercel-black)](https://alrimi.vercel.app)
+[![Vercel](https://img.shields.io/badge/Deployed-Vercel-black)](https://app-kohl-psi-66.vercel.app)
 [![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev)
 [![Supabase](https://img.shields.io/badge/DB-Supabase-3ECF8E)](https://supabase.com)
-![Version](https://img.shields.io/badge/version-1.3.0-brightgreen)
+![Version](https://img.shields.io/badge/version-1.4.0-brightgreen)
 
 ---
 
@@ -26,10 +26,10 @@
 
 | 화면 | 기능 |
 |------|------|
-| 랜딩 | 자녀 카드 선택 (이연준 / 이아연) |
-| **대시보드** | 주간 배너, 오늘 시간표, 오늘 할일, 버스/방과후 하교 스케줄, 최근 알림 |
-| **할일관리** | 📌 오늘할일(학교/숙제) · 📝 매일숙제 · 📋 주간할일 |
-| **학교정보** | 시간표+최신알림장 · 주간학습 · 알림장(클릭→팝업) · 생활안내 |
+| 랜딩 | 자녀 카드 선택 (이연준 / 이아연) — 학교할일 우선 미리보기 |
+| **대시보드** | 주간 배너, 오늘 시간표, 핵심 할일(학교우선), 알림장 팝업, 버스/방과후 스케줄 |
+| **할일관리** | 📌 오늘할일(학교/학교숙제) · 📝 매일숙제 · 📋 주간할일 |
+| **학교정보** | 시간표+최신알림장 · 주간학습 · 알림장(클릭→중앙 팝업) · 생활안내 |
 | **학원정보** | 방과후학습 + 학원 주간 스케줄, 픽업 정보 |
 
 ---
@@ -41,7 +41,7 @@
 | Frontend | React 19 + Vite 7 + React Router 7 |
 | DB | Supabase (PostgreSQL) |
 | PWA | vite-plugin-pwa (Service Worker + Manifest) |
-| 배포 | Vercel (GitHub 자동 배포) |
+| 배포 | Vercel — https://app-kohl-psi-66.vercel.app |
 | 알림장 파싱 | Python + supabase-py |
 
 ---
@@ -56,16 +56,19 @@ kids/
 │   │   ├── context/            # DataContext (Supabase), AuthContext
 │   │   ├── lib/                # supabase.js
 │   │   └── pages/              # Dashboard, TodoList, SchoolInfo, AcademyInfo, ...
-│   ├── public/icons/           # PWA 앱 아이콘
+│   ├── public/icons/           # PWA 앱 아이콘 (두 아이+무지개 캐리커처)
+│   ├── public/images/          # 프로필 이미지 (이연준/이아연 캐리커처)
+│   ├── vercel.json             # Vercel 배포 설정 (Vite + SPA routing)
 │   ├── .env                    # Supabase 접속 정보 (gitignore)
 │   └── vite.config.js          # PWA 설정
-├── docs/hiclass/               # 알림장 PDF 저장 폴더 (gitignore)
+├── docs/image/                 # 원본 이미지 자료
 ├── scripts/
 │   ├── schema.sql              # DB 초기 스키마
 │   ├── migration_v2.sql        # v2 마이그레이션
-│   ├── migration_v3.sql        # v3 마이그레이션 예정
 │   ├── seed_db.py              # 초기 데이터 시딩
 │   ├── seed_v2.py              # v2 시딩 (방과후/매일숙제)
+│   ├── fix_dups.py             # 중복 할일 제거 유틸
+│   ├── process_images.py       # 이미지 처리 유틸
 │   └── update_notice_*.py      # 일일 알림장 업데이트 스크립트
 └── .agent/workflows/
     └── update-hiclass.md       # 알림장 업데이트 워크플로우
@@ -87,7 +90,7 @@ kids/
 | `school_info` | 아침활동, 안전지도, 학교생활규칙, 연락처 |
 | `after_school_programs` | 방과후학습 (요일별, 픽업 방법) |
 | `academies` | 학원 정보 |
-| `daily_homework_logs` | 매일숙제 완료 기록 (분석용) |
+| `daily_homework_logs` | 매일숙제 완료 기록 |
 
 ---
 
@@ -122,11 +125,20 @@ kids/
 
 ## 📋 버전 히스토리
 
+### v1.4.0 (2026-03-04)
+- 아이 카드·대시보드 할일: **학교할일 우선 정렬**, 매일숙제(daily) 제외
+- 대시보드 알림 클릭: 학교정보 이동 → **대시보드 내 팝업 모달**로 변경
+- 할일관리 "숙제" → **"학교숙제"** 레이블 변경
+- DB 중복 할일 3건 제거 (yeonjun)
+- 캐리커처 앱 아이콘 + 프로필 이미지 적용 (이연준/이아연)
+- 프로필 이미지 압축 (8MB → 220KB) — PWA 캐시 한도 대응
+- **Vercel 프로덕션 배포** 완료: https://app-kohl-psi-66.vercel.app
+
 ### v1.3.0 (2026-03-03)
-- 학교정보 알림장 팝업: 하단시트 → **화면 중앙 모달**로 변경
+- 학교정보 알림장 팝업: 하단시트 → 화면 **중앙 모달**로 변경
 - 알림장 내용 항목별 카드 분리 (가시성 개선)
-- 최신 알림장 시간표 탭에 추가 (시간표 아래 위치)
-- notices 정렬 기준을 id 내림차순으로 변경 (실제 최신 우선)
+- 최신 알림장 시간표 아래 위치
+- notices 정렬 기준 id 내림차순으로 변경
 
 ### v1.2.0 (2026-03-03)
 - 할일관리 3탭: 📌 오늘할일(학교/숙제) · 📝 매일숙제 · 📋 주간할일
@@ -136,7 +148,7 @@ kids/
 - 일일 알림장 텍스트 → 할일 자동 추출 워크플로우
 
 ### v1.1.0 (2026-03-02)
-- Supabase 백엔드 통합 (8개 → 11개 테이블)
+- Supabase 백엔드 통합 (11개 테이블)
 - 대시보드 주간 배너 추가
 - PWA 설정 (Service Worker, Manifest, 앱 아이콘)
 - GitHub + Vercel 배포 파이프라인 구축
